@@ -49,14 +49,19 @@ def tweetStatus(type,i,action):
     tweet(choice(sales)+" (total vend count is now "+i[1:]+")")
   elif type == "D":
     if action == "add":
-      tweet(choice(dry)+" (slot "+i+" is empty)")
+      tweet(choice(dry)+" (slot "+i+" is empty) @CUnnerup")
     else:
       tweet(choice(undry)+" (slot "+i+" refilled)")
   elif type == "J":
     if action == "add":
-      tweet(choice(jam)+" (slot "+i+" jammed)")
+      tweet(choice(jam)+" (slot "+i+" jammed) @CUnnerup")
     else:
       tweet(choice(unjam)+" (slot "+i+" is no longer jammed)")
+  elif type == "C":
+    if action == "add":
+       tweet("out of coins "+i)
+    else:
+       tweet("restocked coins "+i)
 
 def updateStatus(str,old_str):
   if(str[0] == "S"):
@@ -84,4 +89,3 @@ def parseStatus(stat):
     if old_status != '':
       checkStatus(stat)
     old_status = stat
-

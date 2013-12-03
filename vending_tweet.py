@@ -45,7 +45,8 @@ def readData():
         print "Could not initialize bluetooth connection. Retrying."
         time.sleep(5)
 
-    while True:
+    if ser:
+      while True:
         ser.write("S")
         time.sleep(2);
         sodaStatus = ser.read(ser.inWaiting())
@@ -56,10 +57,10 @@ def readData():
             print "no response"
             break
 
-    print "Dropped bluetooth connection. Sleeping for 5 seconds."
-    dbus_serial.Disconnect(node)
-    time.sleep(5)
-    print "Retrying."
+      print "Dropped bluetooth connection. Sleeping for 5 seconds."
+      dbus_serial.Disconnect(node)
+      time.sleep(5)
+      print "Retrying."
 
 while True:
     readData()

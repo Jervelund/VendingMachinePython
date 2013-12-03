@@ -1,0 +1,1 @@
+python vending_tweet.py > /var/log/python_vend
