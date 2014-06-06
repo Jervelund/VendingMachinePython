@@ -54,7 +54,8 @@ def tweet(str):
 
 def tweetStatus(type,i,action):
   print "Tweet: " + type
-  """
+  return
+
   if type == 'B':
     tweet(choice(sales)+" (total vend count is now "+i[1:]+")")
   elif type == 'D':
@@ -72,7 +73,6 @@ def tweetStatus(type,i,action):
        tweet("out of coins "+i)
     else:
        tweet("restocked coins "+i)
-  """
 
 def updateStatus(str,old_str):
   if str[0] == 'B':
