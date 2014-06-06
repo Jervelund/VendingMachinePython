@@ -2,7 +2,6 @@
 
 import sys
 import time
-import dbus
 import serial
 from optparse import OptionParser, make_option
 
@@ -103,39 +102,14 @@ def parseStatus(stat):
 
 def readData():
     try:
-        print "Connecting to bluetooth"
-        bus = dbus.SystemBus()
-        manager = dbus.Interface(bus.get_object("org.bluez", "/"),
-                                                       "org.bluez.Manager")
-        option_list = [
-                        make_option("-i", "--device", action="store",
-                                        type="string", dest="dev_id"),
-                        ]
-        parser = OptionParser(option_list=option_list)
-        (options, args) = parser.parse_args()
-        if options.dev_id:
-            adapter_path = manager.FindAdapter(options.dev_id)
-        else:
-            adapter_path = manager.DefaultAdapter()
-        adapter = dbus.Interface(bus.get_object("org.bluez", adapter_path),
-                                                                "org.bluez.Adapter")
-        address = "00:12:02:10:41:01"
-        service = "spp"
-        path = adapter.FindDevice(address)
-        dbus_serial = dbus.Interface(bus.get_object("org.bluez", path),
-                                                        "org.bluez.Serial")
-        node = dbus_serial.Connect(service)
-
-        print "Connected %s to %s" % (node, address)
-
         # Create serial port
         time.sleep(2)
-        ser = serial.Serial(node,115200)
+        ser = serial.Serial('/dev/rfcomm0', 115200)
     except:
-        print "Could not initialize bluetooth connection. Retrying."
+        print "Could not initialize Bluetooth connection. Retrying."
         time.sleep(5)
 
-    if ser:
+    if ser.isOpen():
       while True:
         ser.write("S")
         time.sleep(2);
@@ -147,8 +121,7 @@ def readData():
             print "no response"
             break
 
-      print "Dropped bluetooth connection. Sleeping for 5 seconds."
-      dbus_serial.Disconnect(node)
+      print "Dropped Bluetooth connection. Sleeping for 5 seconds."
       time.sleep(5)
       print "Retrying."
 
