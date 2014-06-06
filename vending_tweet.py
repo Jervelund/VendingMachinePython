@@ -75,8 +75,8 @@ def tweetStatus(type,i,action):
   """
 
 def updateStatus(str,old_str):
-  if(str[0] == 'B'):
-    if(str != old_str):
+  if str[0] == 'B':
+    if str != old_str:
       tweetStatus(str[0], str, '')
   else:
     l_added = list(set(str) - set(old_str))
@@ -95,7 +95,9 @@ def checkStatus(str):
   if len(stat) == 4: # Make sure it has the right length
     for index in range(len(stat)):
       if stat[index] != old_stat[index]:
-        updateStatus(stat[index],old_stat[index]);
+        updateStatus(stat[index], old_stat[index]);
+  else
+    print "Wrong Twitter message length."
 
 def parseStatus(stat):
   global old_status
