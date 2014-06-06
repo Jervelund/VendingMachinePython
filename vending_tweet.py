@@ -106,7 +106,7 @@ while True:
     ser = serial.Serial('/dev/rfcomm0') # Create serial port
   except:
     print "Could not initialize Bluetooth connection. Retrying."
-    time.sleep(60)
+    time.sleep(10)
 
   if ser.isOpen():
     print "Connection established."
