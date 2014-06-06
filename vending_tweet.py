@@ -102,7 +102,7 @@ def parseStatus(stat):
 
 while True:
   try:
-    print "Trying to establish Bluetooth connection"
+    print "Trying to establish Bluetooth connection."
     ser = serial.Serial('/dev/rfcomm0') # Create serial port
   except:
     print "Could not initialize Bluetooth connection. Retrying."
@@ -124,3 +124,4 @@ while True:
         print "Dropped Bluetooth connection unexpectedly."
         break
     print "Retrying..."
+    ser.close()
