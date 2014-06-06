@@ -46,8 +46,6 @@ unjam =['I feel better already!',
 'It\'s alive! It\'s alive!',
 'Good as new, I think. Am I leaking?']
 
-old_status = 'S0,J,D,C'
-
 def tweet(str):
    try:
       response = client.api.statuses.update.post(status=str)
@@ -55,50 +53,56 @@ def tweet(str):
       print "Could not tweet " + str
 
 def tweetStatus(type,i,action):
-  if type == "S":
+  print "Tweet: " + type
+  """
+  if type == 'B':
     tweet(choice(sales)+" (total vend count is now "+i[1:]+")")
-  elif type == "D":
+  elif type == 'D':
     if action == "add":
       tweet(choice(dry)+" (slot "+i+" is empty) @CUnnerup")
     else:
       tweet(choice(undry)+" (slot "+i+" refilled)")
-  elif type == "J":
+  elif type == 'J':
     if action == "add":
       tweet(choice(jam)+" (slot "+i+" jammed) @CUnnerup")
     else:
       tweet(choice(unjam)+" (slot "+i+" is no longer jammed)")
-  elif type == "C":
+  elif type == 'C':
     if action == "add":
        tweet("out of coins "+i)
     else:
        tweet("restocked coins "+i)
+  """
 
 def updateStatus(str,old_str):
-  if(str[0] == "S"):
+  if(str[0] == 'B'):
     if(str != old_str):
-      tweetStatus(str[0],str,"")
+      tweetStatus(str[0], str, '')
   else:
     l_added = list(set(str) - set(old_str))
     l_removed = list(set(old_str) - set(str))
     for item in l_added:
-      tweetStatus(str[0],item,"add")
+      tweetStatus(str[0], item, "add")
     for item in l_removed:
-      tweetStatus(str[0],item,"rem")
+      tweetStatus(str[0], item, "rem")
+
+old_status = ''
 
 def checkStatus(str):
   global old_status
   old_stat = old_status.split(",")
   stat = str.split(",")
-  for index in range(len(stat)):
-    if stat[index] != old_stat[index]:
-      updateStatus(stat[index],old_stat[index]);
+  if len(stat) == 4: # Make sure it has the right length
+    for index in range(len(stat)):
+      if stat[index] != old_stat[index]:
+        updateStatus(stat[index],old_stat[index]);
 
 def parseStatus(stat):
   global old_status
-  if old_status != stat:
-    if old_status != '':
+  if old_status != '' && old_status != stat:
+    if stat[0] == 'B'
       checkStatus(stat)
-    old_status = stat
+  old_status = stat
 
 while True:
   try:
@@ -116,10 +120,7 @@ while True:
         sodaStatus = ser.read(ser.inWaiting())
         if sodaStatus:
           print "Data: " + sodaStatus
-        #    parseStatus(sodaStatus)
-        if ser.isOpen() == False:
-          print "Connection closed."
-          break
+          parseStatus(sodaStatus)
       except:
         print "Dropped Bluetooth connection unexpectedly."
         break
