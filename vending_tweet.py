@@ -100,30 +100,24 @@ def parseStatus(stat):
       checkStatus(stat)
     old_status = stat
 
-def readData():
-    try:
-        # Create serial port
-        time.sleep(2)
-        ser = serial.Serial('/dev/rfcomm0', 115200)
-    except:
-        print "Could not initialize Bluetooth connection. Retrying."
-        time.sleep(5)
-
-    if ser.isOpen():
-      while True:
-        ser.write("S")
-        time.sleep(2);
-        sodaStatus = ser.read(ser.inWaiting())
-        if sodaStatus:
-            parseStatus(sodaStatus)
-            time.sleep(300)
-        else:
-            print "no response"
-            break
-
-      print "Dropped Bluetooth connection. Sleeping for 5 seconds."
-      time.sleep(5)
-      print "Retrying."
-
 while True:
-    readData()
+  try:
+    ser = serial.Serial('/dev/rfcomm0', 115200) # Create serial port
+  except:
+    print "Could not initialize Bluetooth connection. Retrying."
+    time.sleep(60)
+
+  if ser.isOpen():
+    while True:
+      time.sleep(2);
+      sodaStatus = ser.read(ser.inWaiting())
+      if sodaStatus:
+        print "Data:" + sodaStatus
+      #    parseStatus(sodaStatus)
+      if ser.isOpen() == False:
+        print "Connection closed"
+        break
+
+    print "Dropped Bluetooth connection. Sleeping for 5 seconds."
+    time.sleep(5)
+    print "Retrying."
