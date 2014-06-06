@@ -101,7 +101,7 @@ def checkStatus(str):
 
 def parseStatus(stat):
   global old_status
-  if old_status != '' && old_status != stat:
+  if old_status != '' and old_status != stat:
     if stat[0] == 'B'
       checkStatus(stat)
   old_status = stat
