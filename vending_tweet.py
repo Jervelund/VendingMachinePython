@@ -6,14 +6,8 @@ import dbus
 import serial
 from optparse import OptionParser, make_option
 
-# see birdy documentation for further use
-
-from birdy.twitter import UserClient
-client = UserClient('XXX',
-                    'XXX',
-                    'XXX',
-                    'XXX')
-
+print "Loading twitter library"
+execfile("twt.py")
 
 from random import choice
 
