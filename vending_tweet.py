@@ -91,7 +91,7 @@ def checkStatus(str):
   stat = str.split(",")
   for index in range(len(stat)):
     if stat[index] != old_stat[index]:
-       updateStatus(stat[index],old_stat[index]);
+      updateStatus(stat[index],old_stat[index]);
 
 def parseStatus(stat):
   global old_status
@@ -102,22 +102,25 @@ def parseStatus(stat):
 
 while True:
   try:
+    print "Trying to establish Bluetooth connection"
     ser = serial.Serial('/dev/rfcomm0') # Create serial port
   except:
     print "Could not initialize Bluetooth connection. Retrying."
     time.sleep(60)
 
   if ser.isOpen():
+    print "Connection established."
     while True:
       time.sleep(2)
       try:
         sodaStatus = ser.read(ser.inWaiting())
         if sodaStatus:
-          print "Data:" + sodaStatus
+          print "Data: " + sodaStatus
         #    parseStatus(sodaStatus)
         if ser.isOpen() == False:
-          print "Dropped Bluetooth connection"
+          print "Connection closed."
           break
       except:
-        print "Dropped Bluetooth connection"
+        print "Dropped Bluetooth connection unexpectedly."
         break
+    print "Retrying..."
