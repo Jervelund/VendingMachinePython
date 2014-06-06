@@ -96,7 +96,7 @@ def checkStatus(str):
     for index in range(len(stat)):
       if stat[index] != old_stat[index]:
         updateStatus(stat[index], old_stat[index]);
-  else
+  else:
     print "Wrong Twitter message length."
 
 def parseStatus(stat):
