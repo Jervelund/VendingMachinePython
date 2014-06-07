@@ -97,25 +97,16 @@ def parseStatus(stat):
 
   print "parseBuffer: " + parseBuffer
 
-  if parseBuffer[0] == 'B': # Beverages dispensed
-    if ',' in parseBuffer:
-      if parseBuffer[1:parseBuffer.index(',')].isdigit():
-        cmd = parseBuffer[1:parseBuffer.index(',')]
-        #print "B: " + cmd
-        if parseBuffer[0] in oldBuffer and cmd != oldBuffer[parseBuffer[0]]:
-          tweetStatus(parseBuffer[0], cmd, '')
-        oldBuffer[parseBuffer[0]] = cmd
-
-        parseBuffer = parseBuffer[parseBuffer.index(',') + 1:]
-    else:
-      return
-  elif parseBuffer[0] == 'J' or parseBuffer[0] == 'D' or parseBuffer[0] == 'R': # Jammed slots or empty beverage slots (dry) or empty coin return slots
+  if parseBuffer[0] == 'B' or parseBuffer[0] == 'J' or parseBuffer[0] == 'D' or parseBuffer[0] == 'R': # Beverages dispensed or jammed slots or empty beverage slots (dry) or empty coin return slots
     if ',' in parseBuffer:
       if parseBuffer[1:parseBuffer.index(',')].isdigit():
         cmd = parseBuffer[1:parseBuffer.index(',')]
         #print parseBuffer[0] + " " + cmd
-        if parseBuffer[0] in oldBuffer:
-          tweetDiff(parseBuffer[0], cmd, oldBuffer[parseBuffer[0]])
+        if parseBuffer[0] in oldBuffer and cmd != oldBuffer[parseBuffer[0]]:
+          if parseBuffer[0] == 'B':
+            tweetStatus(parseBuffer[0], cmd, '')
+          else:
+            tweetDiff(parseBuffer[0], cmd, oldBuffer[parseBuffer[0]])
         oldBuffer[parseBuffer[0]] = cmd
         parseBuffer = parseBuffer[parseBuffer.index(',') + 1:]
     else:
