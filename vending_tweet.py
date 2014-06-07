@@ -187,6 +187,7 @@ def parseStatus(stat):
 
 def main():
   while True:
+    ser = ''
     try:
       print "Trying to establish Bluetooth connection."
       ser = serial.Serial('/dev/rfcomm0') # Create serial port
