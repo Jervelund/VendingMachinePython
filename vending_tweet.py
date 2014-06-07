@@ -6,7 +6,7 @@ import serial
 from optparse import OptionParser, make_option
 
 print "Loading twitter library"
-execfile("/root/twt.py") # must use absolute path when executing via curl | python
+execfile("twt.py")
 
 from random import choice
 
@@ -53,7 +53,7 @@ def tweet(str):
   except:
      print "Could not tweet " + str
 
-def tweetStatus(type,i,action):
+def tweetStatus(type,i='',action=''):
   if type == 'B':
     tweet(choice(sales) + " (total vend count is now " + i + ")")
   elif type == 'D':
@@ -73,6 +73,20 @@ def tweetStatus(type,i,action):
        tweet("Restocked coins " + i)
   elif type == 'C':
     tweet("Card swiped - current credits: " + i)
+  elif type == 'F':
+    if action == 'deposit':
+      tweet("Card swiped - deposited: " + i)
+    else:
+      tweet("Card swiped - withdrew: " + i)
+  elif type == 'E':
+    if action == 0:
+      tweet("Shoot! I'm really in trouble now - couldn't withdraw! :( (EEPROM  Error) @Jervelund @Lauszus @CUnnerup")
+    else:
+      tweet("Shoot! I'm really in trouble now - couldn't deposit. :( (EEPROM Error) @Jervelund @Lauszus @CUnnerup")
+  elif type == 'O':
+    tweet("I Why can't I hold all these card UIDs. :( (EEPROM full) @Jervelund @Lauszus @CUnnerup")
+  elif type == 'N':
+    tweet("I ain't saying I'm a gold digger, but I ain't messing with no empty cards. (No credit)")
 
 def tweetDiff(type, str, old_str):
   l_added = list(set(str) - set(old_str))
@@ -84,9 +98,22 @@ def tweetDiff(type, str, old_str):
 
 oldBuffer = {}
 parseBuffer = ''
+if True: # Debug messages for all possible RFID transactions
+  # Withdraw
+  parseBuffer += 'CabababababN' # No credits
+  parseBuffer += 'CabababababSxyF' # withdrew xy credits 
+  parseBuffer += 'CabababababE' # Bad EEPROM error
+  # Deposit
+  parseBuffer += 'CabababababZZZZZF' # Deposited ab credits
+  parseBuffer += 'CabababababZZZZZSabE' # Could not deposit credits, due to bad EEPROM
+  parseBuffer += 'CabababababZZZZZSabO' # Could not deposit credits, due to out of EEPROM
+
+currentCreditsInMachine = 0
+currentModeIsDeposit = False
+setCredits = 0
 
 def parseStatus(stat):
-  global parseBuffer
+  global parseBuffer, currentModeIsDeposit, setCredits, currentCreditsInMachine
 
   parseBuffer += stat
 
@@ -122,24 +149,41 @@ def parseStatus(stat):
         parseBuffer = parseBuffer[i:]
         parseStatus('')
         return
+    # Set/reset state variables
+    currentCreditsInMachine = value
+    currentModeIsDeposit = False
+    setCredits = 0
 
-    tweetStatus(parseBuffer[0], value, '')
     parseBuffer = parseBuffer[11:]
   elif parseBuffer[0] == 'S': # Set current credits
     # 'Sxy'
-    return
+    if len(parseBuffer) < 3:
+      return
+    value = str(ord(parseBuffer[1]) | (ord(parseBuffer[2]) << 8))
+    setCredits = value
+    parseBuffer = parseBuffer[3:]
   elif parseBuffer[0] == 'E': # Error EEPROM bad
     # 'E'
+    tweetStatus('E','',setCredits)
     pass
   elif parseBuffer[0] == 'O': # Out of memory
     # 'O'
-    # @Jervelund @Lauszus
+    tweetStatus('O',)
     pass
   elif parseBuffer[0] == 'N': # No credit
     # 'N'
+    tweetStatus('N')
     pass
-
-  #print "parseBuffer: " + parseBuffer
+  elif parseBuffer[0] == 'F': # No credit
+    # 'F'
+    if currentModeIsDeposit:
+      tweetStatus('F',currentCreditsInMachine,'deposit');
+    else:
+      tweetStatus('F',setCredits,'withdraw');
+  elif parseBuffer[0] == 'Z': # Credits zeroed - deposit mode
+    currentModeIsDeposit = True
+    # 'Z'
+    pass
 
   if len(parseBuffer) == length:
     parseBuffer = parseBuffer[1:]
@@ -158,16 +202,16 @@ def main():
       if ser.isOpen():
         print "Connection established."
         while True:
-          time.sleep(2)
-          sodaStatus = ''
+          sodaStatus = ' ' #''
           try:
-            sodaStatus = ser.read(ser.inWaiting())
+            pass #sodaStatus = ser.read(ser.inWaiting())
           except:
             print "Dropped Bluetooth connection unexpectedly."
             break
           if sodaStatus:
             print "Data: " + sodaStatus
             parseStatus(sodaStatus)
+          time.sleep(5)
         print "Retrying..."
         parseBuffer = ''
         if ser:
