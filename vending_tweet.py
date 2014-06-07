@@ -6,7 +6,7 @@ import serial
 from optparse import OptionParser, make_option
 
 print "Loading twitter library"
-#execfile("twt.py")
+execfile("twt.py")
 
 from random import choice
 
@@ -49,6 +49,7 @@ unjam =['I feel better already!',
 def tweet(str):
   try:
      response = client.api.statuses.update.post(status=str)
+     print "Sent tweet: " + str
   except:
      print "Could not tweet: " + str
 
@@ -110,7 +111,6 @@ if False: # Debug messages for all possible RFID transactions
 currentCreditsInMachine = 0
 currentModeIsDeposit = False
 setCredits = 0
-import pprint
 
 def parseStatus(stat):
   global parseBuffer, currentModeIsDeposit, setCredits, currentCreditsInMachine, oldBuffer
@@ -121,19 +121,11 @@ def parseStatus(stat):
 
   if length == 0:
     return
-
-  print "parseBuffer: " + parseBuffer
-  print "PB0: " + parseBuffer[0]
-  pprint.pprint(locals())
-  pprint.pprint(parseBuffer)
-  pprint.pprint(oldBuffer)
   if parseBuffer[0] == 'B' or parseBuffer[0] == 'J' or parseBuffer[0] == 'D' or parseBuffer[0] == 'R': # Beverages dispensed or jammed slots or empty beverage slots (dry) or empty coin return slots
-    print parseBuffer + " Watt"
     if ',' in parseBuffer:
       indx = parseBuffer.index(',')
       if parseBuffer[1:indx].isdigit() or indx == 1:
         cmd = parseBuffer[1:indx]
-        pprint.pprint(cmd)
         if parseBuffer[0] in oldBuffer and cmd != oldBuffer[parseBuffer[0]]:
           if parseBuffer[0] == 'B':
             tweetStatus(parseBuffer[0], cmd, '')
@@ -148,7 +140,6 @@ def parseStatus(stat):
     if len(parseBuffer) < 11:
       return
     value = str(ord(parseBuffer[1]) | (ord(parseBuffer[2]) << 8))
-    #print "Value: " + value
     for i in range(3,11,2):
       if value != str(ord(parseBuffer[i]) | (ord(parseBuffer[i + 1]) << 8)):
         parseBuffer = parseBuffer[i:]
@@ -214,7 +205,6 @@ def main():
             print "Dropped Bluetooth connection unexpectedly."
             break
           if sodaStatus:
-            print "Data: " + sodaStatus
             parseStatus(sodaStatus)
           time.sleep(5)
         print "Retrying..."
