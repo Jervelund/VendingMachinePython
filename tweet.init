@@ -10,15 +10,22 @@
 
 case "$1" in
   start)
-        /home/pi/tweet.sh &
+        echo "Starting python tweet script"
+        cd /home/pi/
+        /home/pi/startTweet.sh &
         ;;
   restart|reload|force-reload)
+        echo "Stopping python tweet script"
+        kill -9 $(pidof python) 2> /dev/null
+        echo "Starting python tweet script"
+        cd /home/pi/
+        /home/pi/startTweet.sh &
         ;;
   stop)
-        kill -9 $(pidof python)
+        echo "Stopping python tweet script"
+        kill -9 $(pidof python) 2> /dev/null
         ;;
   *)
         echo "Usage: $0 start|stop"
         ;;
 esac
-

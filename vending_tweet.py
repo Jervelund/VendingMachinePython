@@ -5,8 +5,8 @@ import time
 import serial
 from optparse import OptionParser, make_option
 
-#print "Loading twitter library"
-#execfile("twt.py")
+print "Loading twitter library"
+execfile("twt.py")
 
 from random import choice
 
@@ -48,10 +48,10 @@ unjam =['I feel better already!',
 
 def tweet(str):
   print "\nTweet: " + str + "\n"
-  #try:
-  #   response = client.api.statuses.update.post(status=str)
-  #except:
-  #   print "Could not tweet " + str
+  try:
+     response = client.api.statuses.update.post(status=str)
+  except:
+     print "Could not tweet " + str
 
 def tweetStatus(type,i,action):
   if type == 'B':

@@ -1,0 +1,1 @@
+curl https://raw.githubusercontent.com/Jervelund/VendingMachinePython/master/vending_tweet.py | python
