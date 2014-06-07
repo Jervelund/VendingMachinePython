@@ -6,7 +6,7 @@ import serial
 from optparse import OptionParser, make_option
 
 print "Loading twitter library"
-execfile("twt.py")
+#execfile("twt.py")
 
 from random import choice
 
@@ -47,11 +47,10 @@ unjam =['I feel better already!',
 'Good as new, I think. Am I leaking?']
 
 def tweet(str):
-  print "\nTweet: " + str + "\n"
   try:
      response = client.api.statuses.update.post(status=str)
   except:
-     print "Could not tweet " + str
+     print "Could not tweet: " + str
 
 def tweetStatus(type,i='',action=''):
   if type == 'B':
@@ -75,16 +74,16 @@ def tweetStatus(type,i='',action=''):
     tweet("Card swiped - current credits: " + i)
   elif type == 'F':
     if action == 'deposit':
-      tweet("Card swiped - deposited: " + i)
+      tweet("Card swiped - deposited: " + str(i))
     else:
-      tweet("Card swiped - withdrew: " + i)
+      tweet("Card swiped - withdrew: " + str(i))
   elif type == 'E':
     if action == 0:
       tweet("Shoot! I'm really in trouble now - couldn't withdraw! :( (EEPROM  Error) @Jervelund @Lauszus @CUnnerup")
     else:
       tweet("Shoot! I'm really in trouble now - couldn't deposit. :( (EEPROM Error) @Jervelund @Lauszus @CUnnerup")
   elif type == 'O':
-    tweet("I Why can't I hold all these card UIDs. :( (EEPROM full) @Jervelund @Lauszus @CUnnerup")
+    tweet("Why can't I hold all these card UIDs. :( (EEPROM full) @Jervelund @Lauszus @CUnnerup")
   elif type == 'N':
     tweet("I ain't saying I'm a gold digger, but I ain't messing with no empty cards. (No credit)")
 
@@ -98,7 +97,7 @@ def tweetDiff(type, str, old_str):
 
 oldBuffer = {}
 parseBuffer = ''
-if True: # Debug messages for all possible RFID transactions
+if False: # Debug messages for all possible RFID transactions
   # Withdraw
   parseBuffer += 'CabababababN' # No credits
   parseBuffer += 'CabababababSxyF' # withdrew xy credits 
@@ -111,9 +110,10 @@ if True: # Debug messages for all possible RFID transactions
 currentCreditsInMachine = 0
 currentModeIsDeposit = False
 setCredits = 0
+import pprint
 
 def parseStatus(stat):
-  global parseBuffer, currentModeIsDeposit, setCredits, currentCreditsInMachine
+  global parseBuffer, currentModeIsDeposit, setCredits, currentCreditsInMachine, oldBuffer
 
   parseBuffer += stat
 
@@ -123,19 +123,24 @@ def parseStatus(stat):
     return
 
   print "parseBuffer: " + parseBuffer
-
+  print "PB0: " + parseBuffer[0]
+  pprint.pprint(locals())
+  pprint.pprint(parseBuffer)
+  pprint.pprint(oldBuffer)
   if parseBuffer[0] == 'B' or parseBuffer[0] == 'J' or parseBuffer[0] == 'D' or parseBuffer[0] == 'R': # Beverages dispensed or jammed slots or empty beverage slots (dry) or empty coin return slots
+    print parseBuffer + " Watt"
     if ',' in parseBuffer:
-      if parseBuffer[1:parseBuffer.index(',')].isdigit():
-        cmd = parseBuffer[1:parseBuffer.index(',')]
-        #print parseBuffer[0] + " " + cmd
+      indx = parseBuffer.index(',')
+      if parseBuffer[1:indx].isdigit() or indx == 1:
+        cmd = parseBuffer[1:indx]
+        pprint.pprint(cmd)
         if parseBuffer[0] in oldBuffer and cmd != oldBuffer[parseBuffer[0]]:
           if parseBuffer[0] == 'B':
             tweetStatus(parseBuffer[0], cmd, '')
           else:
             tweetDiff(parseBuffer[0], cmd, oldBuffer[parseBuffer[0]])
         oldBuffer[parseBuffer[0]] = cmd
-        parseBuffer = parseBuffer[parseBuffer.index(',') + 1:]
+        parseBuffer = parseBuffer[indx + 1:]
     else:
       return
   elif parseBuffer[0] == 'C': # Credits in machine
@@ -202,9 +207,9 @@ def main():
       if ser.isOpen():
         print "Connection established."
         while True:
-          sodaStatus = ' ' #''
+          sodaStatus = ''
           try:
-            pass #sodaStatus = ser.read(ser.inWaiting())
+            sodaStatus = ser.read(ser.inWaiting())
           except:
             print "Dropped Bluetooth connection unexpectedly."
             break
