@@ -11,14 +11,12 @@
 case "$1" in
   start)
         echo "Starting python tweet script"
-        cd /home/pi/
         /home/pi/startTweet.sh &
         ;;
   restart|reload|force-reload)
         echo "Stopping python tweet script"
         kill -9 $(pidof python) 2> /dev/null
         echo "Starting python tweet script"
-        cd /home/pi/
         /home/pi/startTweet.sh &
         ;;
   stop)

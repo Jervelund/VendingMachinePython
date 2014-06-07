@@ -6,7 +6,7 @@ import serial
 from optparse import OptionParser, make_option
 
 print "Loading twitter library"
-execfile("twt.py")
+execfile("/root/twt.py") # must use absolute path when executing via curl | python
 
 from random import choice
 
