@@ -5,8 +5,8 @@ import time
 import serial
 from optparse import OptionParser, make_option
 
-print "Loading twitter library"
-execfile("twt.py")
+#print "Loading twitter library"
+#execfile("twt.py")
 
 from random import choice
 
@@ -47,84 +47,139 @@ unjam =['I feel better already!',
 'Good as new, I think. Am I leaking?']
 
 def tweet(str):
-   try:
-      response = client.api.statuses.update.post(status=str)
-   except:
-      print "Could not tweet " + str
+  print "\nTweet: " + str + "\n"
+  #try:
+  #   response = client.api.statuses.update.post(status=str)
+  #except:
+  #   print "Could not tweet " + str
 
 def tweetStatus(type,i,action):
-  print "Tweet: " + type
-  return
-
   if type == 'B':
-    tweet(choice(sales)+" (total vend count is now "+i[1:]+")")
+    tweet(choice(sales) + " (total vend count is now " + i + ")")
   elif type == 'D':
     if action == "add":
-      tweet(choice(dry)+" (slot "+i+" is empty) @CUnnerup")
+      tweet(choice(dry) + " (slot " + i + " is empty) @CUnnerup")
     else:
-      tweet(choice(undry)+" (slot "+i+" refilled)")
+      tweet(choice(undry) + " (slot " + i + " refilled)")
   elif type == 'J':
     if action == "add":
-      tweet(choice(jam)+" (slot "+i+" jammed) @CUnnerup")
+      tweet(choice(jam) + " (slot " + i + " jammed) @CUnnerup")
     else:
-      tweet(choice(unjam)+" (slot "+i+" is no longer jammed)")
-  elif type == 'C':
+      tweet(choice(unjam) + " (slot " + i + " is no longer jammed)")
+  elif type == 'R':
     if action == "add":
-       tweet("out of coins "+i)
+       tweet("Out of coins " + i)
     else:
-       tweet("restocked coins "+i)
+       tweet("Restocked coins " + i)
+  elif type == 'C':
+    tweet("Card swiped - current credits: " + i)
 
-def updateStatus(str,old_str):
-  if str[0] == 'B':
-    if str != old_str:
-      tweetStatus(str[0], str, '')
-  else:
-    l_added = list(set(str) - set(old_str))
-    l_removed = list(set(old_str) - set(str))
-    for item in l_added:
-      tweetStatus(str[0], item, "add")
-    for item in l_removed:
-      tweetStatus(str[0], item, "rem")
+def tweetDiff(type, str, old_str):
+  l_added = list(set(str) - set(old_str))
+  l_removed = list(set(old_str) - set(str))
+  for item in l_added:
+    tweetStatus(type, item, "add")
+  for item in l_removed:
+    tweetStatus(type, item, "rem")
 
-old_status = ''
-
-def checkStatus(str):
-  global old_status
-  old_stat = old_status.split(",")
-  stat = str.split(",")
-  if len(stat) == 4: # Make sure it has the right length
-    for index in range(len(stat)):
-      if stat[index] != old_stat[index]:
-        updateStatus(stat[index], old_stat[index])
-  else:
-    print "Wrong Twitter message length."
+oldBuffer = {}
+parseBuffer = ''
 
 def parseStatus(stat):
-  global old_status
-  if old_status != '' and old_status != stat:
-    if stat[0] == 'B':
-      checkStatus(stat)
-  old_status = stat
+  global parseBuffer
 
-while True:
-  try:
-    print "Trying to establish Bluetooth connection."
-    ser = serial.Serial('/dev/rfcomm0') # Create serial port
-  except:
-    print "Could not initialize Bluetooth connection. Retrying."
-    time.sleep(10)
+  parseBuffer += stat
 
-  if ser.isOpen():
-    print "Connection established."
-    while True:
-      time.sleep(2)
-      try:
-        sodaStatus = ser.read(ser.inWaiting())
-        if sodaStatus:
-          print "Data: " + sodaStatus
-          parseStatus(sodaStatus)
-      except:
-        print "Dropped Bluetooth connection unexpectedly."
-        break
-    print "Retrying..."
-    ser.close()
+  length = len(parseBuffer)
+
+  if length == 0:
+    return
+
+  print "parseBuffer: " + parseBuffer
+
+  if parseBuffer[0] == 'B': # Beverages dispensed
+    if ',' in parseBuffer:
+      if parseBuffer[1:parseBuffer.index(',')].isdigit():
+        cmd = parseBuffer[1:parseBuffer.index(',')]
+        #print "B: " + cmd
+        if parseBuffer[0] in oldBuffer and cmd != oldBuffer[parseBuffer[0]]:
+          tweetStatus(parseBuffer[0], cmd, '')
+        oldBuffer[parseBuffer[0]] = cmd
+
+        parseBuffer = parseBuffer[parseBuffer.index(',') + 1:]
+    else:
+      return
+  elif parseBuffer[0] == 'J' or parseBuffer[0] == 'D' or parseBuffer[0] == 'R': # Jammed slots or empty beverage slots (dry) or empty coin return slots
+    if ',' in parseBuffer:
+      if parseBuffer[1:parseBuffer.index(',')].isdigit():
+        cmd = parseBuffer[1:parseBuffer.index(',')]
+        #print parseBuffer[0] + " " + cmd
+        if parseBuffer[0] in oldBuffer:
+          tweetDiff(parseBuffer[0], cmd, oldBuffer[parseBuffer[0]])
+        oldBuffer[parseBuffer[0]] = cmd
+        parseBuffer = parseBuffer[parseBuffer.index(',') + 1:]
+    else:
+      return
+  elif parseBuffer[0] == 'C': # Credits in machine
+    # 'Cxyxyxyxyxy'
+    if len(parseBuffer) < 11:
+      return
+    value = str(ord(parseBuffer[1]) | (ord(parseBuffer[2]) << 8))
+    #print "Value: " + value
+    for i in range(3,11,2):
+      if value != str(ord(parseBuffer[i]) | (ord(parseBuffer[i + 1]) << 8)):
+        parseBuffer = parseBuffer[i:]
+        parseStatus('')
+        return
+
+    tweetStatus(parseBuffer[0], value, '')
+    parseBuffer = parseBuffer[11:]
+  elif parseBuffer[0] == 'S': # Set current credits
+    # 'Sxy'
+    return
+  elif parseBuffer[0] == 'E': # Error EEPROM bad
+    # 'E'
+    pass
+  elif parseBuffer[0] == 'O': # Out of memory
+    # 'O'
+    # @Jervelund @Lauszus
+    pass
+  elif parseBuffer[0] == 'N': # No credit
+    # 'N'
+    pass
+
+  #print "parseBuffer: " + parseBuffer
+
+  if len(parseBuffer) == length:
+    parseBuffer = parseBuffer[1:]
+  parseStatus('')
+
+def main():
+  while True:
+    try:
+      print "Trying to establish Bluetooth connection."
+      ser = serial.Serial('/dev/rfcomm0') # Create serial port
+    except:
+      print "Could not initialize Bluetooth connection. Retrying."
+      time.sleep(10)
+
+    if ser:
+      if ser.isOpen():
+        print "Connection established."
+        while True:
+          time.sleep(2)
+          sodaStatus = ''
+          try:
+            sodaStatus = ser.read(ser.inWaiting())
+          except:
+            print "Dropped Bluetooth connection unexpectedly."
+            break
+          if sodaStatus:
+            print "Data: " + sodaStatus
+            parseStatus(sodaStatus)
+        print "Retrying..."
+        parseBuffer = ''
+        if ser:
+          ser.close()
+
+main()
