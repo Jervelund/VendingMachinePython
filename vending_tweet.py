@@ -109,11 +109,11 @@ if False: # Debug messages for all possible RFID transactions
   parseBuffer += 'CabababababZZZZZSabO' # Could not deposit credits, due to out of EEPROM
 
 currentCreditsInMachine = 0
-currentModeIsDeposit = False
+currentMode = 'withdraw'
 setCredits = 0
 
 def parseStatus(stat):
-  global parseBuffer, currentModeIsDeposit, setCredits, currentCreditsInMachine, oldBuffer
+  global parseBuffer, currentMode, setCredits, currentCreditsInMachine, oldBuffer
 
   parseBuffer += stat
 
@@ -136,21 +136,21 @@ def parseStatus(stat):
     else:
       return
   elif parseBuffer[0] == 'C': # Credits in machine
-    # 'Cxyxyxyxyxy'
-    if len(parseBuffer) < 11:
+    # 'Cxy_xy_xy_xy_xy_'
+    if len(parseBuffer) < 16:
       return
     value = str(ord(parseBuffer[1]) | (ord(parseBuffer[2]) << 8))
-    for i in range(3,11,2):
+    for i in range(4,16,3):
       if value != str(ord(parseBuffer[i]) | (ord(parseBuffer[i + 1]) << 8)):
         parseBuffer = parseBuffer[i:]
         parseStatus('')
-        return
+        return # Stop if error detected with 'C' command
     # Set/reset state variables
     currentCreditsInMachine = value
-    currentModeIsDeposit = False
+    currentMode = 'withdraw'
     setCredits = 0
 
-    parseBuffer = parseBuffer[11:]
+    parseBuffer = parseBuffer[16:]
   elif parseBuffer[0] == 'S': # Set current credits
     # 'Sxy'
     if len(parseBuffer) < 3:
@@ -172,14 +172,13 @@ def parseStatus(stat):
     pass
   elif parseBuffer[0] == 'F': # No credit
     # 'F'
-    if currentModeIsDeposit:
-      tweetStatus('F',currentCreditsInMachine,'deposit');
+    if currentMode == 'deposit':
+      tweetStatus('F',currentCreditsInMachine,currentMode);
     else:
-      tweetStatus('F',setCredits,'withdraw');
+      tweetStatus('F',setCredits,currentMode);
   elif parseBuffer[0] == 'Z': # Credits zeroed - deposit mode
-    currentModeIsDeposit = True
     # 'Z'
-    pass
+    currentMode = 'deposit'
 
   if len(parseBuffer) == length:
     parseBuffer = parseBuffer[1:]
