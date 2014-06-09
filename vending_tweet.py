@@ -133,7 +133,7 @@ def parseStatus(stat):
       indx = parseBuffer.index(',')
       if parseBuffer[1:indx].isdigit() or indx == 1:
         value = parseBuffer[1:indx]
-        if value in oldBuffer and value != oldBuffer[cmd]:
+        if cmd in oldBuffer and value != oldBuffer[cmd]:
           if cmd == ord('B'):
             tweetStatus(cmd, value, '')
           else:
