@@ -54,43 +54,45 @@ def tweet(str):
      print "Could not tweet: " + str
 
 def tweetStatus(type,i='',action=''):
-  if type == 'B':
+  if type == ord('B'):
     tweet(choice(sales) + " (total vend count is now " + i + ")")
-  elif type == 'D':
+  elif type == ord('D'):
     if action == "add":
       tweet(choice(dry) + " (slot " + i + " is empty) @CUnnerup")
     else:
       tweet(choice(undry) + " (slot " + i + " refilled)")
-  elif type == 'J':
+  elif type == ord('J'):
     if action == "add":
       tweet(choice(jam) + " (slot " + i + " jammed) @CUnnerup")
     else:
       tweet(choice(unjam) + " (slot " + i + " is no longer jammed)")
-  elif type == 'R':
+  elif type == ord('R'):
     if action == "add":
        tweet("Out of coins " + i)
     else:
        tweet("Restocked coins " + i)
-  elif type == 'C':
+  elif type == ord('C'):
     tweet("Card swiped - current credits: " + i)
-  elif type == 'F':
+  elif type == ord('F'):
     if action == 'deposit':
       tweet("Card swiped - deposited: " + str(i))
     else:
       tweet("Card swiped - withdrew: " + str(i))
-  elif type == 'E':
+  elif type == ord('E'):
     if action == 0:
       tweet("Shoot! I'm really in trouble now - couldn't withdraw! :( (EEPROM  Error) @Jervelund @Lauszus @CUnnerup")
     else:
       tweet("Shoot! I'm really in trouble now - couldn't deposit. :( (EEPROM Error) @Jervelund @Lauszus @CUnnerup")
-  elif type == 'O':
+  elif type == ord('O'):
     tweet("Why can't I hold all these card UIDs. :( (EEPROM full) @Jervelund @Lauszus @CUnnerup")
-  elif type == 'N':
+  elif type == ord('N'):
     tweet("I ain't saying I'm a gold digger, but I ain't messing with no empty cards. (No credit)")
-  elif type == 'c':
+  elif type == ord('c'):
     tweet("Added " + str(i) + " kr with coins")
-  elif type == 'r':
+  elif type == ord('r'):
     tweet("Returned a " + str(i) + " kr coin")
+  else:
+    tweet("Error: Unknown command! @Jervelund @Lauszus @CUnnerup")
 
 def tweetDiff(type, str, old_str):
   l_added = list(set(str) - set(old_str))
@@ -105,7 +107,7 @@ parseBuffer = ''
 if False: # Debug messages for all possible RFID transactions
   # Withdraw
   parseBuffer += 'CabababababN' # No credits
-  parseBuffer += 'CabababababSxyF' # withdrew xy credits 
+  parseBuffer += 'CabababababSxyF' # withdrew xy credits
   parseBuffer += 'CabababababE' # Bad EEPROM error
   # Deposit
   parseBuffer += 'CabababababZZZZZF' # Deposited ab credits
@@ -165,19 +167,19 @@ def parseStatus(stat):
     parseBuffer = parseBuffer[3:]
   elif cmd == ord('E'): # Error EEPROM bad
     # 'E'
-    tweetStatus('E','',setCredits)
+    tweetStatus(cmd, '', setCredits)
   elif cmd == ord('O'): # Out of memory
     # 'O'
-    tweetStatus('O',)
+    tweetStatus(cmd)
   elif cmd == ord('N'): # No credit
     # 'N'
-    tweetStatus('N')
+    tweetStatus(cmd)
   elif cmd == ord('F'): # No credit
     # 'F'
     if currentMode == 'deposit':
-      tweetStatus('F',currentCreditsInMachine,currentMode);
+      tweetStatus(cmd, currentCreditsInMachine, currentMode);
     else:
-      tweetStatus('F',setCredits,currentMode);
+      tweetStatus(cmd, setCredits, currentMode);
   elif cmd == ord('Z'): # Credits zeroed - deposit mode
     # 'Z'
     currentMode = 'deposit'
@@ -185,13 +187,13 @@ def parseStatus(stat):
     # 'cx' - byte encoded value
     if len(parseBuffer) < 2:
       return
-    tweetStatus('c',ord(parseBuffer[1]))
+    tweetStatus(cmd , ord(parseBuffer[1]))
     parseBuffer = parseBuffer[2:]
   elif cmd == ord('r'): # return coins
     # 'rx' - byte encoded value
     if len(parseBuffer) < 2:
       return
-    tweetStatus('r',ord(parseBuffer[1]))
+    tweetStatus(cmd , ord(parseBuffer[1]))
     parseBuffer = parseBuffer[2:]
 
   if len(parseBuffer) == length:
