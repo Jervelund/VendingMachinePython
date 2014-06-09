@@ -166,15 +166,12 @@ def parseStatus(stat):
   elif cmd == ord('E'): # Error EEPROM bad
     # 'E'
     tweetStatus('E','',setCredits)
-    pass
   elif cmd == ord('O'): # Out of memory
     # 'O'
     tweetStatus('O',)
-    pass
   elif cmd == ord('N'): # No credit
     # 'N'
     tweetStatus('N')
-    pass
   elif cmd == ord('F'): # No credit
     # 'F'
     if currentMode == 'deposit':
