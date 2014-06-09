@@ -68,16 +68,21 @@ def tweetStatus(type,i='',action=''):
       tweet(choice(unjam) + " (slot " + i + " is no longer jammed)")
   elif type == ord('R'):
     if action == "add":
-       tweet("Out of coins " + i)
+       #tweet("Out of coins " + i)
+       print "Out of coins " + i
     else:
-       tweet("Restocked coins " + i)
+       #tweet("Restocked coins " + i)
+       print "Restocked coins " + i
   elif type == ord('C'):
-    tweet("Card swiped - current credits: " + i)
+    #tweet("Card swiped - current credits: " + i)
+    print "Card swiped - current credits: " + i
   elif type == ord('F'):
     if action == 'deposit':
-      tweet("Card swiped - deposited: " + str(i))
+      #tweet("Card swiped - deposited: " + str(i))
+      print "Card swiped - deposited: " + str(i)
     else:
-      tweet("Card swiped - withdrew: " + str(i))
+      #tweet("Card swiped - withdrew: " + str(i))
+      print "Card swiped - withdrew: " + str(i)
   elif type == ord('E'):
     if action == 0:
       tweet("Shoot! I'm really in trouble now - couldn't withdraw! :( (EEPROM  Error) @Jervelund @Lauszus @CUnnerup")
@@ -86,13 +91,16 @@ def tweetStatus(type,i='',action=''):
   elif type == ord('O'):
     tweet("Why can't I hold all these card UIDs. :( (EEPROM full) @Jervelund @Lauszus @CUnnerup")
   elif type == ord('N'):
-    tweet("I ain't saying I'm a gold digger, but I ain't messing with no empty cards. (No credit)")
+    #tweet("I ain't saying I'm a gold digger, but I ain't messing with no empty cards. (No credit)")
+    print "I ain't saying I'm a gold digger, but I ain't messing with no empty cards. (No credit)"
   elif type == ord('c'):
-    tweet("Added " + str(i) + " kr with coins")
+    #tweet("Added " + str(i) + " kr with coins")
+    print "Added " + str(i) + " kr with coins"
   elif type == ord('r'):
-    tweet("Returned a " + str(i) + " kr coin")
+    #tweet("Returned a " + str(i) + " kr coin")
+    print "Returned a " + str(i) + " kr coin"
   else:
-    tweet("Error: Unknown command! @Jervelund @Lauszus @CUnnerup")
+    tweet("Error! Unknown command: " + str(type) + " @Jervelund @Lauszus @CUnnerup")
 
 def tweetDiff(type, str, old_str):
   l_added = list(set(str) - set(old_str))
