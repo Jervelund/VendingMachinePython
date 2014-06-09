@@ -87,6 +87,10 @@ def tweetStatus(type,i='',action=''):
     tweet("Why can't I hold all these card UIDs. :( (EEPROM full) @Jervelund @Lauszus @CUnnerup")
   elif type == 'N':
     tweet("I ain't saying I'm a gold digger, but I ain't messing with no empty cards. (No credit)")
+  elif type == 'c':
+    tweet("Added " + str(i) + " kr with coins")
+  elif type == 'r':
+    tweet("Returned a " + str(i) + " kr coin")
 
 def tweetDiff(type, str, old_str):
   l_added = list(set(str) - set(old_str))
@@ -116,26 +120,27 @@ def parseStatus(stat):
   global parseBuffer, currentMode, setCredits, currentCreditsInMachine, oldBuffer
 
   parseBuffer += stat
-
   length = len(parseBuffer)
-
   if length == 0:
     return
-  if parseBuffer[0] == 'B' or parseBuffer[0] == 'J' or parseBuffer[0] == 'D' or parseBuffer[0] == 'R': # Beverages dispensed or jammed slots or empty beverage slots (dry) or empty coin return slots
+
+  cmd = ord(parseBuffer[0]) # Case sensitive matching
+
+  if cmd == ord('B') or cmd == ord('J') or cmd == ord('D') or cmd == ord('R'): # Beverages dispensed or jammed slots or empty beverage slots (dry) or empty coin return slots
     if ',' in parseBuffer:
       indx = parseBuffer.index(',')
       if parseBuffer[1:indx].isdigit() or indx == 1:
         cmd = parseBuffer[1:indx]
-        if parseBuffer[0] in oldBuffer and cmd != oldBuffer[parseBuffer[0]]:
-          if parseBuffer[0] == 'B':
-            tweetStatus(parseBuffer[0], cmd, '')
+        if cmd in oldBuffer and cmd != oldBuffer[cmd]:
+          if cmd == ord('B'):
+            tweetStatus(cmd, cmd, '')
           else:
-            tweetDiff(parseBuffer[0], cmd, oldBuffer[parseBuffer[0]])
-        oldBuffer[parseBuffer[0]] = cmd
+            tweetDiff(cmd, cmd, oldBuffer[cmd])
+        oldBuffer[cmd] = cmd
         parseBuffer = parseBuffer[indx + 1:]
     else:
       return
-  elif parseBuffer[0] == 'C': # Credits in machine
+  elif cmd == ord('C'): # Credits in machine
     # 'Cxy_xy_xy_xy_xy_'
     if len(parseBuffer) < 16:
       return
@@ -151,34 +156,46 @@ def parseStatus(stat):
     setCredits = 0
 
     parseBuffer = parseBuffer[16:]
-  elif parseBuffer[0] == 'S': # Set current credits
+  elif cmd == ord('S'): # Set current credits
     # 'Sxy'
     if len(parseBuffer) < 3:
       return
     value = str(ord(parseBuffer[1]) | (ord(parseBuffer[2]) << 8))
     setCredits = value
     parseBuffer = parseBuffer[3:]
-  elif parseBuffer[0] == 'E': # Error EEPROM bad
+  elif cmd == ord('E'): # Error EEPROM bad
     # 'E'
     tweetStatus('E','',setCredits)
     pass
-  elif parseBuffer[0] == 'O': # Out of memory
+  elif cmd == ord('O'): # Out of memory
     # 'O'
     tweetStatus('O',)
     pass
-  elif parseBuffer[0] == 'N': # No credit
+  elif cmd == ord('N'): # No credit
     # 'N'
     tweetStatus('N')
     pass
-  elif parseBuffer[0] == 'F': # No credit
+  elif cmd == ord('F'): # No credit
     # 'F'
     if currentMode == 'deposit':
       tweetStatus('F',currentCreditsInMachine,currentMode);
     else:
       tweetStatus('F',setCredits,currentMode);
-  elif parseBuffer[0] == 'Z': # Credits zeroed - deposit mode
+  elif cmd == ord('Z'): # Credits zeroed - deposit mode
     # 'Z'
     currentMode = 'deposit'
+  elif cmd == ord('c'): # coins added
+    # 'cx' - byte encoded value
+    if len(parseBuffer) < 2:
+      return
+    tweetStatus('c',ord(parseBuffer[1]))
+    parseBuffer = parseBuffer[2:]
+  elif cmd == ord('r'): # return coins
+    # 'rx' - byte encoded value
+    if len(parseBuffer) < 2:
+      return
+    tweetStatus('r',ord(parseBuffer[1]))
+    parseBuffer = parseBuffer[2:]
 
   if len(parseBuffer) == length:
     parseBuffer = parseBuffer[1:]
